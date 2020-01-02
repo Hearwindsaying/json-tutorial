@@ -1,18 +1,29 @@
 #ifndef LEPTJSON_H__
 #define LEPTJSON_H__
 
+#include <variant>
+#include <stddef.h> /* size_t */
+
 typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
 
 /**
  * @brief This struct is used to store result value from parsed json string.
  */
-typedef struct {
-    /* number, available only |type| == LEPT_NUMBER */
-    double n;
+struct lept_value{
+    /* Type declaration: */
+    struct JString
+    {
+        char* s;    /* string ended with '\0' */
+        size_t len; /* length of string */
+    };
+
+
+    /* Member declaration: */
+    std::variant<JString, double> value;
 
     /* json type */
     lept_type type;
-}lept_value;
+};
 
 enum {
     LEPT_PARSE_OK = 0,
