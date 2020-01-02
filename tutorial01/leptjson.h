@@ -3,7 +3,14 @@
 
 typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
 
+/**
+ * @brief This struct is used to store result value from parsed json string.
+ */
 typedef struct {
+    /* number, available only |type| == LEPT_NUMBER */
+    double n;
+
+    /* json type */
     lept_type type;
 }lept_value;
 
@@ -25,8 +32,15 @@ int lept_parse(lept_value* v, const char* json);
 /**
  * @brief Retrieve a type from |v|.
  * @param[in] v value that has been parsed before
- * @return Return type stored in v.
+ * @return Return type stored in |v|.
  */
 lept_type lept_get_type(const lept_value* v);
+
+/**
+ * @brief Retrieve the number from |v|.
+ * @param[in] v value that has been parsed before
+ * @return Return number stored in |v|.
+ */
+double lept_get_number(const lept_value* v);
 
 #endif /* LEPTJSON_H__ */
