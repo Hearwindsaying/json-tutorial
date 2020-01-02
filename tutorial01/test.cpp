@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "leptjson.h"
+#include "leptjson.hpp"
 
 static int main_ret = 0;
 static int test_count = 0;
@@ -167,7 +167,7 @@ static void test_parse_missing_quotation_mark() {
 }
 
 static void test_parse_invalid_string_escape() {
-#if 0
+#if 1
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\v\"");
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\'\"");
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\0\"");
@@ -176,7 +176,7 @@ static void test_parse_invalid_string_escape() {
 }
 
 static void test_parse_invalid_string_char() {
-#if 0
+#if 1
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");
     TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x1F\"");
 #endif

@@ -2,7 +2,7 @@
 #define _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
 #endif
-#include "leptjson.h"
+#include "leptjson.hpp"
 #include <cassert>  /* assert() */
 #include <cstdlib>  /* NULL, strtod() */
 #include <cerrno>   /* errno */
