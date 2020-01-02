@@ -1,9 +1,12 @@
 #include "leptjson.h"
 #include <cassert>  /* assert() */
 #include <cstdlib>  /* NULL, strtod() */
+#include <cerrno>   /* errno */
 #include <string_view>
 
 #define EXPECT(c, ch)       do { assert(*c->json == (ch)); c->json++; } while(0)
+#define ISDIGIT(ch)         ((ch) >= '0' && (ch) <= '9')
+#define ISDIGIT1TO9(ch)     ((ch) >= '1' && (ch) <= '9')
 
 typedef struct {
     /* Current parsing position of json string. */
@@ -30,12 +33,47 @@ static int lept_parse_literal(lept_context* c, lept_value* v, std::string_view l
 }
 
 static int lept_parse_number(lept_context* c, lept_value* v) {
-    char* end;
-    /* \TODO validate number */
-    v->n = strtod(c->json, &end);
-    if (c->json == end)
+    /* validate number */
+    const char *p = c->json;
+    if (*p == '-')
+        ++p;
+    if (*p == '0')
+        ++p;
+    else if (ISDIGIT1TO9(*p))
+    {
+        ++p; /* could be ignored */
+        while (ISDIGIT(*p))
+            ++p;
+    }
+    else
         return LEPT_PARSE_INVALID_VALUE;
-    c->json = end;
+
+    if (*p == '.')
+    {
+        ++p; 
+        if (!ISDIGIT(*p)) 
+            return LEPT_PARSE_INVALID_VALUE;
+        /* ++p; could be ignored, same as above (and below) */
+        while (ISDIGIT(*p))
+            ++p;
+    }
+
+    if (*p == 'e' || *p == 'E')
+    {
+        ++p;
+        if (*p == '+' || *p == '-')
+            ++p;
+        if (!ISDIGIT(*p))
+            return LEPT_PARSE_INVALID_VALUE;
+        while (ISDIGIT(*p))
+            ++p;
+    }
+
+    errno = 0;
+    v->n = strtod(c->json, nullptr);
+    if (errno == ERANGE && (v->n == HUGE_VAL || v->n == -HUGE_VAL))
+        return LEPT_PARSE_NUMBER_TOO_BIG;
+    c->json = p;
     v->type = LEPT_NUMBER;
     return LEPT_PARSE_OK;
 }
@@ -63,7 +101,11 @@ int lept_parse(lept_value* v, const char* json) {
 
     lept_parse_whitespace(&c);
     if (*c.json != '\0')
+    {
+        v->type = LEPT_NULL;
         return LEPT_PARSE_ROOT_NOT_SINGULAR;
+    }
+       
     else
         return parseErrorCode;
 }

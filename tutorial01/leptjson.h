@@ -18,7 +18,8 @@ enum {
     LEPT_PARSE_OK = 0,
     LEPT_PARSE_EXPECT_VALUE,        /* Json string is empty. */
     LEPT_PARSE_INVALID_VALUE,       /* Not supported value. */
-    LEPT_PARSE_ROOT_NOT_SINGULAR    /* After a json value, a blank is followed by a character. */
+    LEPT_PARSE_ROOT_NOT_SINGULAR,   /* After a json value, a blank is followed by a character. */
+    LEPT_PARSE_NUMBER_TOO_BIG       /* Number is too big. */
 };
 
 /**
