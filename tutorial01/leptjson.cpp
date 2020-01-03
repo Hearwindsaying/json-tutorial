@@ -55,7 +55,7 @@ static void* lept_context_push(lept_context* c, size_t size) {
             char *oldStack = c->stack;
             c->stack = new char[c->size];
             memcpy(c->stack, oldStack, c->size);
-            delete oldStack;
+            delete[] oldStack;
 
             c->size += c->size >> 1;  /* c->size * 1.5 */
         }
@@ -169,7 +169,7 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
             c->top = head;
             return LEPT_PARSE_MISS_QUOTATION_MARK;
         default:
-            if ((unsigned char)ch < 0x20) {
+            if (static_cast<unsigned char>(ch) < 0x20) {
                 c->top = head;
                 return LEPT_PARSE_INVALID_STRING_CHAR;
             }
@@ -200,16 +200,22 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         return LEPT_PARSE_OK;
     }
     for (;;) {
-        lept_parse_whitespace(c);
-
         lept_value e;
         lept_init(&e);
         if ((ret = lept_parse_value(c, &e)) != LEPT_PARSE_OK)
-            return ret;
+        {
+            break;
+        }
+
+        lept_parse_whitespace(c);
+            
         memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value));
         size++;
         if (*c->json == ',')
+        {
             c->json++;
+            lept_parse_whitespace(c);
+        }
         else if (*c->json == ']') {
             c->json++;
             v->type = LEPT_ARRAY;
@@ -224,8 +230,16 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
             return LEPT_PARSE_OK;
         }
         else
-            return LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
+        {
+            ret = LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET;
+            break;
+        }
+            
     }
+    /* Pop and free values on the stack */
+    for (int i = 0; i < size; i++)
+        lept_free(static_cast<lept_value*>(lept_context_pop(c, sizeof(lept_value))));
+    return ret;
 }
 
 static int lept_parse_value(lept_context* c, lept_value* v) {
@@ -252,7 +266,7 @@ int lept_parse(lept_value* v, const char* json) {
     int parseErrorCode = lept_parse_value(&c, v);
 
     assert(c.top == 0);
-    delete c.stack;
+    delete[] c.stack;
 
     if (parseErrorCode != LEPT_PARSE_OK)
         return parseErrorCode;
@@ -270,10 +284,30 @@ int lept_parse(lept_value* v, const char* json) {
 void lept_free(lept_value* v) 
 {
     assert(v != nullptr);
+
+    switch (v->type) {
+        case LEPT_STRING:
+        {
+            assert(std::holds_alternative<lept_value::JString>(v->value));
+            delete[] std::get<lept_value::JString>(v->value).s;
+            break;
+        }
+            
+        case LEPT_ARRAY:
+        {
+            assert(std::holds_alternative<lept_value::JArray>(v->value));
+            for (int i = 0; i < std::get<lept_value::JArray>(v->value).size; i++)
+                lept_free(&(std::get<lept_value::JArray>(v->value).e[i]));
+            delete[] std::get<lept_value::JArray>(v->value).e;
+            break;
+        }
+            
+        default: break;
+    }
+
     if (v->type == LEPT_STRING)
     {
-        assert(std::holds_alternative<lept_value::JString>(v->value));
-        delete std::get<lept_value::JString>(v->value).s;
+        
     }
        
     v->type = LEPT_NULL;
