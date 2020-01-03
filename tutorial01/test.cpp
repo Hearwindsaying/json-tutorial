@@ -1,6 +1,10 @@
-#ifdef _WINDOWS
+#define  CL_CHECK_MEMORY_LEAKS
+#ifdef CL_CHECK_MEMORY_LEAKS
 #define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
 #include <crtdbg.h>
+#define CL_CHECK_MEMORY_LEAKS_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new CL_CHECK_MEMORY_LEAKS_NEW
 #endif
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,6 +32,8 @@ static int test_pass = 0;
     EXPECT_EQ_BASE(sizeof(expect) - 1 == alength && memcmp(expect, actual, alength) == 0, expect, actual, "%s")
 #define EXPECT_TRUE(actual) EXPECT_EQ_BASE((actual) != 0, "true", "false", "%s")
 #define EXPECT_FALSE(actual) EXPECT_EQ_BASE((actual) == 0, "false", "true", "%s")
+
+#define EXPECT_EQ_SIZE_T(expect, actual) EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%zu")
 
 static void test_parse_null() {
     lept_value v;
@@ -117,6 +123,16 @@ static void test_parse_string() {
 #endif
 }
 
+static void test_parse_array() {
+    lept_value v;
+
+    lept_init(&v);
+    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
+    EXPECT_EQ_INT(LEPT_ARRAY, lept_get_type(&v));
+    EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
+    lept_free(&v);
+}
+
 #define TEST_ERROR(error, json)\
     do {\
         lept_value v;\
@@ -145,6 +161,12 @@ static void test_parse_invalid_value() {
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "inf");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "NAN");
     TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nan");
+
+    /* invalid value in array */
+#if 0
+    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "[1,]");
+    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "[\"a\", nul]");
+#endif
 }
 
 static void test_parse_root_not_singular() {
@@ -221,12 +243,22 @@ static void test_access_string() {
     lept_free(&v);
 }
 
+static void test_parse_miss_comma_or_square_bracket() {
+#if 1
+    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1");
+    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1}");
+    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1 2");
+    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[[]");
+#endif
+}
+
 static void test_parse() {
     test_parse_null();
     test_parse_true();
     test_parse_false();
     test_parse_number();
     test_parse_string();
+    test_parse_array();
     test_parse_expect_value();
     test_parse_invalid_value();
     test_parse_root_not_singular();
@@ -234,6 +266,7 @@ static void test_parse() {
     test_parse_missing_quotation_mark();
     test_parse_invalid_string_escape();
     test_parse_invalid_string_char();
+    test_parse_miss_comma_or_square_bracket();
 
     test_access_null();
     test_access_boolean();
@@ -248,5 +281,9 @@ int main() {
 
     test_parse();
     printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
+
+    _CrtDumpMemoryLeaks();
+
+
     return main_ret;
 }
