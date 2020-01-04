@@ -8,12 +8,12 @@ enum class ELeptType { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRIN
 
 #define LEPT_KEY_NOT_EXIST ((size_t)-1)
 
-struct lept_value;
-struct lept_member;
+struct Lept_value;
+struct Lept_member;
 /**
  * @brief This struct is used to store result value from parsed json string.
  */
-struct lept_value{
+struct Lept_value{
     /* Type declaration: */
     struct JString
     {
@@ -23,13 +23,13 @@ struct lept_value{
 
     struct JArray
     {
-        lept_value *e;
+        Lept_value *e;
         size_t size;
     };
 
     struct JObject
     {
-        lept_member* m; 
+        Lept_member* m; 
         size_t size;
     };
 
@@ -41,10 +41,10 @@ struct lept_value{
     ELeptType type;
 };
 
-struct lept_member 
+struct Lept_member 
 {
     char* k; size_t klen;   /* member key string, key string length */
-    lept_value v;           /* member value */
+    Lept_value v;           /* member value */
 };
 
 enum {
@@ -70,45 +70,45 @@ enum {
  * @param[out] v    value
  * @return Return error code for parsing.
  */
-int lept_parse(lept_value* v, const char* json);
+int lept_parse(Lept_value* v, const char* json);
 
 /**
  * @brief Deallocate space allocated for string storage in |v|
  * if it owns a string. Set |v| type to LEPT_NULL as well.
  * @param[in] v
  */
-void lept_free(lept_value* v);
+void lept_free(Lept_value* v);
 
 /**
  * @brief Retrieve a type from |v|.
  * @param[in] v value that has been parsed before
  * @return Return type stored in |v|.
  */
-ELeptType lept_get_type(const lept_value* v);
+ELeptType lept_get_type(const Lept_value* v);
 
 #define lept_set_null(v) lept_free(v)
 
-int lept_get_boolean(const lept_value* v);
-void lept_set_boolean(lept_value* v, int b);
+int lept_get_boolean(const Lept_value* v);
+void lept_set_boolean(Lept_value* v, int b);
 
 /**
  * @brief Retrieve the number from |v|.
  * @param[in] v value that has been parsed before
  * @return Return number stored in |v|.
  */
-double lept_get_number(const lept_value* v);
-void lept_set_number(lept_value* v, double n);
+double lept_get_number(const Lept_value* v);
+void lept_set_number(Lept_value* v, double n);
 
 
-const char* lept_get_string(const lept_value* v);
-size_t lept_get_string_length(const lept_value* v);
+const char* lept_get_string(const Lept_value* v);
+size_t lept_get_string_length(const Lept_value* v);
 /**
  * @brief Modify string stored in lept_value.
  * @param[in] v 
  * @param[in] s
  * @param[in] len length of |s|
  */
-void lept_set_string(lept_value* v, const char* s, size_t len);
+void lept_set_string(Lept_value* v, const char* s, size_t len);
 
 /**
  * @brief Get array size from |v|.
@@ -116,16 +116,16 @@ void lept_set_string(lept_value* v, const char* s, size_t len);
  * @param[in] v
  * @return size of array
  */
-size_t lept_get_array_size(const lept_value* v);
-lept_value* lept_get_array_element(const lept_value* v, size_t index);
+size_t lept_get_array_size(const Lept_value* v);
+Lept_value* lept_get_array_element(const Lept_value* v, size_t index);
 
 
-size_t lept_get_object_size(const lept_value* v);
-const char* lept_get_object_key(const lept_value* v, size_t index);
-size_t lept_get_object_key_length(const lept_value* v, size_t index);
-lept_value* lept_get_object_value(const lept_value* v, size_t index);
+size_t lept_get_object_size(const Lept_value* v);
+const char* lept_get_object_key(const Lept_value* v, size_t index);
+size_t lept_get_object_key_length(const Lept_value* v, size_t index);
+Lept_value* lept_get_object_value(const Lept_value* v, size_t index);
 
-size_t lept_find_object_index(const lept_value* v, const char* key, size_t klen);
-lept_value* lept_find_object_value(lept_value* v, const char* key, size_t klen);
+size_t lept_find_object_index(const Lept_value* v, const char* key, size_t klen);
+Lept_value* lept_find_object_value(Lept_value* v, const char* key, size_t klen);
 
 #endif /* LEPTJSON_H__ */

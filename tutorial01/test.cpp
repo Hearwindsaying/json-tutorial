@@ -36,7 +36,7 @@ static int test_pass = 0;
 #define EXPECT_EQ_SIZE_T(expect, actual) EXPECT_EQ_BASE((expect) == (actual), (size_t)expect, (size_t)actual, "%zu")
 
 static void test_parse_null() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 0);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
@@ -45,7 +45,7 @@ static void test_parse_null() {
 }
 
 static void test_parse_true() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 0);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
@@ -54,7 +54,7 @@ static void test_parse_true() {
 }
 
 static void test_parse_false() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 1);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "false"));
@@ -64,7 +64,7 @@ static void test_parse_false() {
 
 #define TEST_NUMBER(expect, json)\
     do {\
-        lept_value v;\
+        Lept_value v;\
         lept_init(&v);\
         EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, json));\
         EXPECT_EQ_INT(ELeptType::LEPT_NUMBER, lept_get_type(&v));\
@@ -106,7 +106,7 @@ static void test_parse_number() {
 
 #define TEST_STRING(expect, json)\
     do {\
-        lept_value v;\
+        Lept_value v;\
         lept_init(&v);\
         EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, json));\
         EXPECT_EQ_INT(ELeptType::LEPT_STRING, lept_get_type(&v));\
@@ -124,7 +124,7 @@ static void test_parse_string() {
 }
 
 static void test_parse_array() {
-    lept_value v;
+    Lept_value v;
 
     lept_init(&v);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
@@ -150,11 +150,11 @@ static void test_parse_array() {
     EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(4, lept_get_array_size(&v));
     for (int i = 0; i < 4; i++) {
-        lept_value* a = lept_get_array_element(&v, i);
+        Lept_value* a = lept_get_array_element(&v, i);
         EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(a));
         EXPECT_EQ_SIZE_T(i, lept_get_array_size(a));
         for (int j = 0; j < i; j++) {
-            lept_value* e = lept_get_array_element(a, j);
+            Lept_value* e = lept_get_array_element(a, j);
             EXPECT_EQ_INT(ELeptType::LEPT_NUMBER, lept_get_type(e));
             EXPECT_EQ_DOUBLE(static_cast<double>(j), lept_get_number(e));
         }
@@ -165,7 +165,7 @@ static void test_parse_array() {
 }
 
 static void test_parse_object() {
-    lept_value v;
+    Lept_value v;
     size_t i;
 
     lept_init(&v);
@@ -233,16 +233,16 @@ static void test_parse_object() {
     EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(lept_get_object_value(&v, 5)));
     EXPECT_EQ_SIZE_T(3, lept_get_array_size(lept_get_object_value(&v, 5)));
     for (i = 0; i < 3; i++) {
-        lept_value* e = lept_get_array_element(lept_get_object_value(&v, 5), i);
+        Lept_value* e = lept_get_array_element(lept_get_object_value(&v, 5), i);
         EXPECT_EQ_INT(ELeptType::LEPT_NUMBER, lept_get_type(e));
         EXPECT_EQ_DOUBLE(i + 1.0, lept_get_number(e));
     }
     EXPECT_EQ_STRING("o", lept_get_object_key(&v, 6), lept_get_object_key_length(&v, 6));
     {
-        lept_value* o = lept_get_object_value(&v, 6);
+        Lept_value* o = lept_get_object_value(&v, 6);
         EXPECT_EQ_INT(ELeptType::LEPT_OBJECT, lept_get_type(o));
         for (i = 0; i < 3; i++) {
-            lept_value* ov = lept_get_object_value(o, i);
+            Lept_value* ov = lept_get_object_value(o, i);
             EXPECT_TRUE('1' + i == lept_get_object_key(o, i)[0]);
             EXPECT_EQ_SIZE_T(1, lept_get_object_key_length(o, i));
             EXPECT_EQ_INT(ELeptType::LEPT_NUMBER, lept_get_type(ov));
@@ -254,7 +254,7 @@ static void test_parse_object() {
 
 #define TEST_ERROR(error, json)\
     do {\
-        lept_value v;\
+        Lept_value v;\
         lept_init(&v);\
         v.type = ELeptType::LEPT_FALSE;\
         EXPECT_EQ_INT(error, lept_parse(&v, json));\
@@ -354,7 +354,7 @@ static void test_parse_invalid_string_char() {
 }
 
 static void test_access_null() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_string(&v, "a", 1);
     lept_set_null(&v);
@@ -363,7 +363,7 @@ static void test_access_null() {
 }
 
 static void test_access_boolean() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 1);
     EXPECT_TRUE(lept_get_boolean(&v));
@@ -375,7 +375,7 @@ static void test_access_boolean() {
 }
 
 static void test_access_number() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_number(&v, 12.345);
     EXPECT_EQ_DOUBLE(12.345, lept_get_number(&v));
@@ -383,7 +383,7 @@ static void test_access_number() {
 }
 
 static void test_access_string() {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     lept_set_string(&v, "", 0);
     EXPECT_EQ_STRING("", lept_get_string(&v), lept_get_string_length(&v));
@@ -420,7 +420,7 @@ static void test_parse() {
 
 void testjsonScene()
 {
-    lept_value v;
+    Lept_value v;
     lept_init(&v);
     EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v,
         R"--(

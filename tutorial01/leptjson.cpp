@@ -80,7 +80,7 @@ static void lept_parse_whitespace(lept_context* c) {
 }
 
 
-static int lept_parse_literal(lept_context* c, lept_value* v, std::string_view literal, ELeptType type) {
+static int lept_parse_literal(lept_context* c, Lept_value* v, std::string_view literal, ELeptType type) {
     assert(*c->json == literal[0]);
     for (const auto& lit : literal)
     {
@@ -91,7 +91,7 @@ static int lept_parse_literal(lept_context* c, lept_value* v, std::string_view l
     return LEPT_PARSE_OK;
 }
 
-static int lept_parse_number(lept_context* c, lept_value* v) {
+static int lept_parse_number(lept_context* c, Lept_value* v) {
     /* validate number */
     const char *p = c->json;
     if (*p == '-')
@@ -187,7 +187,7 @@ static int lept_parse_string_raw(lept_context* c, char** str, size_t* len) {
     }
 }
 
-static int lept_parse_string(lept_context* c, lept_value* v) {
+static int lept_parse_string(lept_context* c, Lept_value* v) {
     int ret;
     char* s;
     size_t len;
@@ -196,9 +196,9 @@ static int lept_parse_string(lept_context* c, lept_value* v) {
     return ret;
 }
 
-static int lept_parse_value(lept_context* c, lept_value* v);
+static int lept_parse_value(lept_context* c, Lept_value* v);
 
-static int lept_parse_array(lept_context* c, lept_value* v) {
+static int lept_parse_array(lept_context* c, Lept_value* v) {
     size_t size = 0;
     int ret;
     EXPECT(c, '[');
@@ -210,7 +210,7 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         
         v->type = ELeptType::LEPT_ARRAY;
 
-        lept_value::JArray jarray;
+        Lept_value::JArray jarray;
         jarray.size = 0;
         jarray.e = nullptr;
         
@@ -218,7 +218,7 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         return LEPT_PARSE_OK;
     }
     for (;;) {
-        lept_value e;
+        Lept_value e;
         lept_init(&e);
         if ((ret = lept_parse_value(c, &e)) != LEPT_PARSE_OK)
         {
@@ -226,7 +226,7 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
         }
 
         //memcpy(lept_context_push(c, sizeof(lept_value)), &e, sizeof(lept_value));
-        *static_cast<lept_value *>(lept_context_push(c, sizeof(lept_value))) = e;
+        *static_cast<Lept_value *>(lept_context_push(c, sizeof(Lept_value))) = e;
 
         size++;
         lept_parse_whitespace(c);
@@ -239,14 +239,14 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
             c->json++;
             v->type = ELeptType::LEPT_ARRAY;
 
-            lept_value::JArray jarray;
+            Lept_value::JArray jarray;
             jarray.size = size;
-            jarray.e = new lept_value[size];
+            jarray.e = new Lept_value[size];
            // memcpy(jarray.e, lept_context_pop(c, size * sizeof(lept_value)), size * sizeof(lept_value));
             for (int i = size-1; i >= 0; --i)
             {
                 /* Note that elements poping from stack is in reversed order. */
-                jarray.e[i] = *static_cast<lept_value *>(lept_context_pop(c, sizeof(lept_value)));
+                jarray.e[i] = *static_cast<Lept_value *>(lept_context_pop(c, sizeof(Lept_value)));
             }
 
             v->value = jarray;
@@ -262,14 +262,14 @@ static int lept_parse_array(lept_context* c, lept_value* v) {
     }
     /* Pop and free values on the stack */
     for (int i = 0; i < size; i++)
-        lept_free(static_cast<lept_value*>(lept_context_pop(c, sizeof(lept_value))));
+        lept_free(static_cast<Lept_value*>(lept_context_pop(c, sizeof(Lept_value))));
     return ret;
 }
 
-static int lept_parse_object(lept_context* c, lept_value* v) 
+static int lept_parse_object(lept_context* c, Lept_value* v) 
 {
     size_t size;
-    lept_member m;
+    Lept_member m;
     int ret;
     EXPECT(c, '{');
     lept_parse_whitespace(c);
@@ -277,7 +277,7 @@ static int lept_parse_object(lept_context* c, lept_value* v)
         c->json++;
         v->type = ELeptType::LEPT_OBJECT;
 
-        lept_value::JObject jobject;
+        Lept_value::JObject jobject;
         jobject.size = 0;
         jobject.m = nullptr;
         
@@ -313,7 +313,7 @@ static int lept_parse_object(lept_context* c, lept_value* v)
         if ((ret = lept_parse_value(c, &m.v)) != LEPT_PARSE_OK)
             break;
         //memcpy(lept_context_push(c, sizeof(lept_member)), &m, sizeof(lept_member));
-        *static_cast<lept_member *>(lept_context_push(c, sizeof(lept_member))) = m;
+        *static_cast<Lept_member *>(lept_context_push(c, sizeof(Lept_member))) = m;
         size++;
         m.k = nullptr; /* ownership is transferred to member on stack */
         /* parse ws [comma | right-curly-brace] ws */
@@ -328,12 +328,12 @@ static int lept_parse_object(lept_context* c, lept_value* v)
             c->json++;
             v->type = ELeptType::LEPT_OBJECT;
 
-            lept_value::JObject jobject;
+            Lept_value::JObject jobject;
             jobject.size = size;
-            jobject.m = new lept_member[size];
+            jobject.m = new Lept_member[size];
             for (int i = size - 1; i >= 0; --i)
             {
-                jobject.m[i] = *static_cast<lept_member *>(lept_context_pop(c, sizeof(lept_member)));
+                jobject.m[i] = *static_cast<Lept_member *>(lept_context_pop(c, sizeof(Lept_member)));
             }
             //memcpy(jobject.m = new lept_member[size], lept_context_pop(c, size * sizeof(lept_member)), size * sizeof(lept_member));
 
@@ -352,7 +352,7 @@ static int lept_parse_object(lept_context* c, lept_value* v)
         delete[] m.k;
     for (int i = 0; i < size; i++)
     {
-        lept_member* m = static_cast<lept_member*>(lept_context_pop(c, sizeof(lept_member)));
+        Lept_member* m = static_cast<Lept_member*>(lept_context_pop(c, sizeof(Lept_member)));
         delete[] m->k;
         lept_free(&m->v);
     }
@@ -360,7 +360,7 @@ static int lept_parse_object(lept_context* c, lept_value* v)
     return ret;
 }
 
-static int lept_parse_value(lept_context* c, lept_value* v) {
+static int lept_parse_value(lept_context* c, Lept_value* v) {
     switch (*c->json) {
         case 't':  return lept_parse_literal(c, v, "true", ELeptType::LEPT_TRUE);
         case 'f':  return lept_parse_literal(c, v, "false", ELeptType::LEPT_FALSE);
@@ -373,7 +373,7 @@ static int lept_parse_value(lept_context* c, lept_value* v) {
     }
 }
 
-int lept_parse(lept_value* v, const char* json) {
+int lept_parse(Lept_value* v, const char* json) {
     lept_context c;
     assert(v != nullptr);
     c.json = json;
@@ -400,36 +400,36 @@ int lept_parse(lept_value* v, const char* json) {
         return parseErrorCode;
 }
 
-void lept_free(lept_value* v) 
+void lept_free(Lept_value* v) 
 {
     assert(v != nullptr);
 
     switch (v->type) {
         case ELeptType::LEPT_STRING:
         {
-            assert(std::holds_alternative<lept_value::JString>(v->value));
-            delete[] std::get<lept_value::JString>(v->value).s;
+            assert(std::holds_alternative<Lept_value::JString>(v->value));
+            delete[] std::get<Lept_value::JString>(v->value).s;
             break;
         }
             
         case ELeptType::LEPT_ARRAY:
         {
-            assert(std::holds_alternative<lept_value::JArray>(v->value));
-            for (int i = 0; i < std::get<lept_value::JArray>(v->value).size; i++)
-                lept_free(&(std::get<lept_value::JArray>(v->value).e[i]));
-            delete[] std::get<lept_value::JArray>(v->value).e;
+            assert(std::holds_alternative<Lept_value::JArray>(v->value));
+            for (int i = 0; i < std::get<Lept_value::JArray>(v->value).size; i++)
+                lept_free(&(std::get<Lept_value::JArray>(v->value).e[i]));
+            delete[] std::get<Lept_value::JArray>(v->value).e;
             break;
         }
 
         case ELeptType::LEPT_OBJECT:
         {
-            assert(std::holds_alternative<lept_value::JObject>(v->value));
-            for (int i = 0; i < std::get<lept_value::JObject>(v->value).size; i++)
+            assert(std::holds_alternative<Lept_value::JObject>(v->value));
+            for (int i = 0; i < std::get<Lept_value::JObject>(v->value).size; i++)
             {
-                delete[] std::get<lept_value::JObject>(v->value).m[i].k;
-                lept_free(&(std::get<lept_value::JObject>(v->value).m[i].v));
+                delete[] std::get<Lept_value::JObject>(v->value).m[i].k;
+                lept_free(&(std::get<Lept_value::JObject>(v->value).m[i].v));
             }
-            delete[] std::get<lept_value::JObject>(v->value).m;
+            delete[] std::get<Lept_value::JObject>(v->value).m;
             break;
         }
         default: break;
@@ -438,48 +438,48 @@ void lept_free(lept_value* v)
     v->type = ELeptType::LEPT_NULL;
 }
 
-ELeptType lept_get_type(const lept_value* v) {
+ELeptType lept_get_type(const Lept_value* v) {
     assert(v != nullptr);
     return v->type;
 }
 
-int lept_get_boolean(const lept_value* v) {
+int lept_get_boolean(const Lept_value* v) {
     assert(v != nullptr && (v->type == ELeptType::LEPT_FALSE || v->type == ELeptType::LEPT_TRUE));
     return v->type == ELeptType::LEPT_TRUE;
 }
 
-void lept_set_boolean(lept_value* v, int b) {
+void lept_set_boolean(Lept_value* v, int b) {
     lept_free(v);
     v->type = b ? ELeptType::LEPT_TRUE : ELeptType::LEPT_FALSE;
 }
 
-double lept_get_number(const lept_value* v) {
+double lept_get_number(const Lept_value* v) {
     assert(v != nullptr && v->type == ELeptType::LEPT_NUMBER);
     return std::get<double>(v->value);
 }
 
-void lept_set_number(lept_value* v, double n) {
+void lept_set_number(Lept_value* v, double n) {
     lept_free(v);
     v->type = ELeptType::LEPT_NUMBER;
     v->value = n;
 }
 
-const char* lept_get_string(const lept_value* v) {
+const char* lept_get_string(const Lept_value* v) {
     assert(v != nullptr && v->type == ELeptType::LEPT_STRING);
-    return std::get<lept_value::JString>(v->value).s;
+    return std::get<Lept_value::JString>(v->value).s;
 }
 
-size_t lept_get_string_length(const lept_value* v) {
+size_t lept_get_string_length(const Lept_value* v) {
     assert(v != nullptr && v->type == ELeptType::LEPT_STRING);
-    return std::get<lept_value::JString>(v->value).len;
+    return std::get<Lept_value::JString>(v->value).len;
 }
 
-void lept_set_string(lept_value * v, const char * s, size_t len)
+void lept_set_string(Lept_value * v, const char * s, size_t len)
 {
     assert(v != nullptr && (s != nullptr || len == 0));
     lept_free(v);
 
-    lept_value::JString jstring;
+    Lept_value::JString jstring;
     jstring.s = new char[len + 1];
     memcpy(jstring.s, s, len);
     jstring.s[len] = '\0';
@@ -490,59 +490,59 @@ void lept_set_string(lept_value * v, const char * s, size_t len)
 }
 
 
-size_t lept_get_array_size(const lept_value* v) 
+size_t lept_get_array_size(const Lept_value* v) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_ARRAY && std::holds_alternative<lept_value::JArray>(v->value));
-    return std::get<lept_value::JArray>(v->value).size;
+    assert(v != nullptr && v->type == ELeptType::LEPT_ARRAY && std::holds_alternative<Lept_value::JArray>(v->value));
+    return std::get<Lept_value::JArray>(v->value).size;
 }
 
-lept_value* lept_get_array_element(const lept_value* v, size_t index) 
+Lept_value* lept_get_array_element(const Lept_value* v, size_t index) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_ARRAY && std::holds_alternative<lept_value::JArray>(v->value));
-    assert(index < std::get<lept_value::JArray>(v->value).size);
-    return &(std::get<lept_value::JArray>(v->value).e[index]);
+    assert(v != nullptr && v->type == ELeptType::LEPT_ARRAY && std::holds_alternative<Lept_value::JArray>(v->value));
+    assert(index < std::get<Lept_value::JArray>(v->value).size);
+    return &(std::get<Lept_value::JArray>(v->value).e[index]);
 }
 
-size_t lept_get_object_size(const lept_value* v) 
+size_t lept_get_object_size(const Lept_value* v) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<lept_value::JObject>(v->value));
-    return std::get<lept_value::JObject>(v->value).size;
+    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<Lept_value::JObject>(v->value));
+    return std::get<Lept_value::JObject>(v->value).size;
 }
 
-const char* lept_get_object_key(const lept_value* v, size_t index) 
+const char* lept_get_object_key(const Lept_value* v, size_t index) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<lept_value::JObject>(v->value));
-    assert(index < std::get<lept_value::JObject>(v->value).size);
-    return std::get<lept_value::JObject>(v->value).m[index].k;
+    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<Lept_value::JObject>(v->value));
+    assert(index < std::get<Lept_value::JObject>(v->value).size);
+    return std::get<Lept_value::JObject>(v->value).m[index].k;
 }
 
-size_t lept_get_object_key_length(const lept_value* v, size_t index) 
+size_t lept_get_object_key_length(const Lept_value* v, size_t index) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<lept_value::JObject>(v->value));
-    assert(index < std::get<lept_value::JObject>(v->value).size);
-    return std::get<lept_value::JObject>(v->value).m[index].klen;
+    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<Lept_value::JObject>(v->value));
+    assert(index < std::get<Lept_value::JObject>(v->value).size);
+    return std::get<Lept_value::JObject>(v->value).m[index].klen;
 }
 
-lept_value* lept_get_object_value(const lept_value* v, size_t index) 
+Lept_value* lept_get_object_value(const Lept_value* v, size_t index) 
 {
-    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<lept_value::JObject>(v->value));
-    assert(index < std::get<lept_value::JObject>(v->value).size);
-    return &(std::get<lept_value::JObject>(v->value).m[index]).v;
+    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && std::holds_alternative<Lept_value::JObject>(v->value));
+    assert(index < std::get<Lept_value::JObject>(v->value).size);
+    return &(std::get<Lept_value::JObject>(v->value).m[index]).v;
 }
 
-size_t lept_find_object_index(const lept_value * v, const char * key, size_t klen)
+size_t lept_find_object_index(const Lept_value * v, const char * key, size_t klen)
 {
     size_t i;
-    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && key != nullptr && std::holds_alternative<lept_value::JObject>(v->value));
-    for (i = 0; i < std::get<lept_value::JObject>(v->value).size; i++)
-        if (std::get<lept_value::JObject>(v->value).m[i].klen == klen && 
-            memcmp(std::get<lept_value::JObject>(v->value).m[i].k, key, klen) == 0)
+    assert(v != nullptr && v->type == ELeptType::LEPT_OBJECT && key != nullptr && std::holds_alternative<Lept_value::JObject>(v->value));
+    for (i = 0; i < std::get<Lept_value::JObject>(v->value).size; i++)
+        if (std::get<Lept_value::JObject>(v->value).m[i].klen == klen && 
+            memcmp(std::get<Lept_value::JObject>(v->value).m[i].k, key, klen) == 0)
             return i;
     return LEPT_KEY_NOT_EXIST;
 }
 
-lept_value* lept_find_object_value(lept_value* v, const char* key, size_t klen) 
+Lept_value* lept_find_object_value(Lept_value* v, const char* key, size_t klen) 
 {
     size_t index = lept_find_object_index(v, key, klen);
-    return index != LEPT_KEY_NOT_EXIST ? &(std::get<lept_value::JObject>(v->value).m[index].v) : nullptr;
+    return index != LEPT_KEY_NOT_EXIST ? &(std::get<Lept_value::JObject>(v->value).m[index].v) : nullptr;
 }
