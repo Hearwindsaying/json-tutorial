@@ -12,6 +12,7 @@
 #include <cerrno>   /* errno */
 #include <string_view>
 #include <string>
+#include <memory>
 
 #ifndef LEPT_PARSE_STACK_INIT_SIZE
 #define LEPT_PARSE_STACK_INIT_SIZE 256
@@ -26,7 +27,8 @@ typedef struct {
     const char* json;
 
     /* Stack */
-    char* stack;
+    //std::unique_ptr<char[]> stack;
+    char *stack;
     size_t size, top;
 }lept_context;
 
@@ -42,23 +44,34 @@ typedef struct {
 static void* lept_context_push(lept_context* c, size_t size) {
     void* ret;
     assert(size > 0);
+
+    size_t orgStackSize = c->size;
     if (c->top + size >= c->size) {
         if (c->size == 0)
         {
             c->size = LEPT_PARSE_STACK_INIT_SIZE;
-
             c->stack = new char[c->size];
+            //c->stack.reset(new char[c->size]);
         }
             
+        //while (c->top + size >= c->size)
+        //{
+        //    std::unique_ptr<char[]> oldStack(std::move(c->stack));
+        //    c->stack.reset(new char[c->size]);
+        //    memcpy(c->stack, oldStack, c->size);
+        //    
+
+        //    c->size += c->size >> 1;  /* c->size * 1.5 */
+        //}
         while (c->top + size >= c->size)
         {
-            char *oldStack = c->stack;
-            c->stack = new char[c->size];
-            memcpy(c->stack, oldStack, c->size);
-            delete[] oldStack;
-
             c->size += c->size >> 1;  /* c->size * 1.5 */
         }
+        char *oldStack = c->stack;
+        c->stack = new char[c->size];
+        memcpy(c->stack, oldStack, orgStackSize);
+        delete[] oldStack;
+        
     }
     ret = c->stack + c->top;
     c->top += size;
