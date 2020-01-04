@@ -4,7 +4,9 @@
 #include <variant>
 #include <stddef.h> /* size_t */
 
-typedef enum { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT } lept_type;
+enum class ELeptType { LEPT_NULL, LEPT_FALSE, LEPT_TRUE, LEPT_NUMBER, LEPT_STRING, LEPT_ARRAY, LEPT_OBJECT };
+
+#define LEPT_KEY_NOT_EXIST ((size_t)-1)
 
 struct lept_value;
 struct lept_member;
@@ -36,7 +38,7 @@ struct lept_value{
     std::variant<JObject, JString, JArray, double> value;
 
     /* json type, todo:remove */
-    lept_type type;
+    ELeptType type;
 };
 
 struct lept_member 
@@ -60,7 +62,7 @@ enum {
     LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET
 };
 
-#define lept_init(v) do { (v)->type = LEPT_NULL; } while(0)
+#define lept_init(v) do { (v)->type = ELeptType::LEPT_NULL; } while(0)
 
 /**
  * @brief Parse |json| string and write to |v|.
@@ -82,7 +84,7 @@ void lept_free(lept_value* v);
  * @param[in] v value that has been parsed before
  * @return Return type stored in |v|.
  */
-lept_type lept_get_type(const lept_value* v);
+ELeptType lept_get_type(const lept_value* v);
 
 #define lept_set_null(v) lept_free(v)
 
@@ -122,5 +124,8 @@ size_t lept_get_object_size(const lept_value* v);
 const char* lept_get_object_key(const lept_value* v, size_t index);
 size_t lept_get_object_key_length(const lept_value* v, size_t index);
 lept_value* lept_get_object_value(const lept_value* v, size_t index);
+
+size_t lept_find_object_index(const lept_value* v, const char* key, size_t klen);
+lept_value* lept_find_object_value(lept_value* v, const char* key, size_t klen);
 
 #endif /* LEPTJSON_H__ */
