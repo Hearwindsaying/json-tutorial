@@ -39,7 +39,7 @@ static void test_parse_null() {
     Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 0);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "null"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "null"));
     EXPECT_EQ_INT(ELeptType::LEPT_NULL, lept_get_type(&v));
     lept_free(&v);
 }
@@ -48,7 +48,7 @@ static void test_parse_true() {
     Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 0);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "true"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "true"));
     EXPECT_EQ_INT(ELeptType::LEPT_TRUE, lept_get_type(&v));
     lept_free(&v);
 }
@@ -57,7 +57,7 @@ static void test_parse_false() {
     Lept_value v;
     lept_init(&v);
     lept_set_boolean(&v, 1);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "false"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "false"));
     EXPECT_EQ_INT(ELeptType::LEPT_FALSE, lept_get_type(&v));
     lept_free(&v);
 }
@@ -66,7 +66,7 @@ static void test_parse_false() {
     do {\
         Lept_value v;\
         lept_init(&v);\
-        EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, json));\
+        EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, json));\
         EXPECT_EQ_INT(ELeptType::LEPT_NUMBER, lept_get_type(&v));\
         EXPECT_EQ_DOUBLE(expect, lept_get_number(&v));\
         lept_free(&v);\
@@ -108,7 +108,7 @@ static void test_parse_number() {
     do {\
         Lept_value v;\
         lept_init(&v);\
-        EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, json));\
+        EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, json));\
         EXPECT_EQ_INT(ELeptType::LEPT_STRING, lept_get_type(&v));\
         EXPECT_EQ_STRING(expect, lept_get_string(&v), lept_get_string_length(&v));\
         lept_free(&v);\
@@ -127,13 +127,13 @@ static void test_parse_array() {
     Lept_value v;
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "[ ]"));
     EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(0, lept_get_array_size(&v));
     lept_free(&v);
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ null , false , true , 123 , \"abc\" ]"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "[ null , false , true , 123 , \"abc\" ]"));
     EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(5, lept_get_array_size(&v));
     EXPECT_EQ_INT(ELeptType::LEPT_NULL, lept_get_type(lept_get_array_element(&v, 0)));
@@ -146,7 +146,7 @@ static void test_parse_array() {
     lept_free(&v);
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, "[ [ ] , [ 0 ] , [ 0 , 1 ] , [ 0 , 1 , 2 ] ]"));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, "[ [ ] , [ 0 ] , [ 0 , 1 ] , [ 0 , 1 , 2 ] ]"));
     EXPECT_EQ_INT(ELeptType::LEPT_ARRAY, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(4, lept_get_array_size(&v));
     for (int i = 0; i < 4; i++) {
@@ -169,13 +169,13 @@ static void test_parse_object() {
     size_t i;
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v, " { } "));
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v, " { } "));
     EXPECT_EQ_INT(ELeptType::LEPT_OBJECT, lept_get_type(&v));
     EXPECT_EQ_SIZE_T(0, lept_get_object_size(&v));
     lept_free(&v);
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v,
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v,
         " { "
         "\"a\" : [ 1],"
         "\"a\" : [ 1],"
@@ -204,7 +204,7 @@ static void test_parse_object() {
     lept_free(&v);
 
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v,
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v,
         " { "
         "\"n\" : null , "
         "\"f\" : false , "
@@ -263,93 +263,93 @@ static void test_parse_object() {
     } while(0)
 
 static void test_parse_expect_value() {
-    TEST_ERROR(LEPT_PARSE_EXPECT_VALUE, "");
-    TEST_ERROR(LEPT_PARSE_EXPECT_VALUE, " ");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_EXPECT_VALUE, "");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_EXPECT_VALUE, " ");
 }
 
 static void test_parse_invalid_value() {
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nul");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "?");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "nul");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "?");
 
     /* invalid number */
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+0");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "+1");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, ".123"); /* at least one digit before '.' */
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "1.");   /* at least one digit after '.' */
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "INF");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "inf");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "NAN");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "nan");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "+0");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "+1");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, ".123"); /* at least one digit before '.' */
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "1.");   /* at least one digit after '.' */
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "INF");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "inf");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "NAN");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "nan");
 
     /* invalid value in array */
 #if 1
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "[1,]");
-    TEST_ERROR(LEPT_PARSE_INVALID_VALUE, "[\"a\", nul]");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "[1,]");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_VALUE, "[\"a\", nul]");
 #endif
 }
 
 static void test_parse_root_not_singular() {
-    TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "null x");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_ROOT_NOT_SINGULAR, "null x");
 
     /* invalid number */
-    TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "0123"); /* after zero should be '.' or nothing */
-    TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "0x0");
-    TEST_ERROR(LEPT_PARSE_ROOT_NOT_SINGULAR, "0x123");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_ROOT_NOT_SINGULAR, "0123"); /* after zero should be '.' or nothing */
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_ROOT_NOT_SINGULAR, "0x0");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_ROOT_NOT_SINGULAR, "0x123");
 }
 
 static void test_parse_number_too_big() {
-    TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "1e309");
-    TEST_ERROR(LEPT_PARSE_NUMBER_TOO_BIG, "-1e309");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_NUMBER_TOO_BIG, "1e309");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_NUMBER_TOO_BIG, "-1e309");
 }
 
 static void test_parse_missing_quotation_mark() {
-    TEST_ERROR(LEPT_PARSE_MISS_QUOTATION_MARK, "\"");
-    TEST_ERROR(LEPT_PARSE_MISS_QUOTATION_MARK, "\"abc");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_QUOTATION_MARK, "\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_QUOTATION_MARK, "\"abc");
 }
 
 static void test_parse_miss_comma_or_square_bracket() {
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1}");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1 2");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[[]");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1}");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[1 2");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_SQUARE_BRACKET, "[[]");
 }
 
 static void test_parse_miss_key() {
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{1:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{true:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{false:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{null:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{[]:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{{}:1,");
-    TEST_ERROR(LEPT_PARSE_MISS_KEY, "{\"a\":1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{1:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{true:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{false:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{null:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{[]:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{{}:1,");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_KEY, "{\"a\":1,");
 }
 
 static void test_parse_miss_colon() {
-    TEST_ERROR(LEPT_PARSE_MISS_COLON, "{\"a\"}");
-    TEST_ERROR(LEPT_PARSE_MISS_COLON, "{\"a\",\"b\"}");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COLON, "{\"a\"}");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COLON, "{\"a\",\"b\"}");
 }
 
 static void test_parse_miss_comma_or_curly_bracket() {
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1]");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1 \"b\"");
-    TEST_ERROR(LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":{}");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1]");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":1 \"b\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_MISS_COMMA_OR_CURLY_BRACKET, "{\"a\":{}");
 }
 
 static void test_parse_invalid_string_escape() {
 #if 1
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\v\"");
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\'\"");
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\0\"");
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\x12\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\v\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\'\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\0\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_ESCAPE, "\"\\x12\"");
 #endif
 }
 
 static void test_parse_invalid_string_char() {
 #if 1
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");
-    TEST_ERROR(LEPT_PARSE_INVALID_STRING_CHAR, "\"\x1F\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_CHAR, "\"\x01\"");
+    TEST_ERROR(ELEPT_PARSE_ECODE::LEPT_PARSE_INVALID_STRING_CHAR, "\"\x1F\"");
 #endif
 }
 
@@ -422,7 +422,7 @@ void testjsonScene()
 {
     Lept_value v;
     lept_init(&v);
-    EXPECT_EQ_INT(LEPT_PARSE_OK, lept_parse(&v,
+    EXPECT_EQ_INT(ELEPT_PARSE_ECODE::LEPT_PARSE_OK, lept_parse(&v,
         R"--(
         {
         "renderer": {

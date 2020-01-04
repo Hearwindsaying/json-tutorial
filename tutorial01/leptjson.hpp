@@ -47,7 +47,8 @@ struct Lept_member
     Lept_value v;           /* member value */
 };
 
-enum {
+enum class ELEPT_PARSE_ECODE
+{
     LEPT_PARSE_OK = 0,
     LEPT_PARSE_EXPECT_VALUE,          /* Json string is empty. */
     LEPT_PARSE_INVALID_VALUE,         /* Not supported value. */
@@ -70,7 +71,7 @@ enum {
  * @param[out] v    value
  * @return Return error code for parsing.
  */
-int lept_parse(Lept_value* v, const char* json);
+ELEPT_PARSE_ECODE lept_parse(Lept_value* v, const char* json);
 
 /**
  * @brief Deallocate space allocated for string storage in |v|
