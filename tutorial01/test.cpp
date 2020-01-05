@@ -6,10 +6,12 @@
 #define CL_CHECK_MEMORY_LEAKS_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
 #define new CL_CHECK_MEMORY_LEAKS_NEW
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <string>
+#include <array>
 #include "leptjson.hpp"
+#include "leptjsonWrapper.hpp"
 
 using namespace leptjson;
 
@@ -20,8 +22,10 @@ static int test_pass = 0;
 #define EXPECT_EQ_BASE(equality, expect, actual, format) \
     do {\
         test_count++;\
-        if (equality)\
+        if (equality){\
+            fprintf(stderr, "%s:%d: expect: " format " actual: " format "\n", __FILE__, __LINE__, expect, actual);\
             test_pass++;\
+        }\
         else {\
             fprintf(stderr, "%s:%d: expect: " format " actual: " format "\n", __FILE__, __LINE__, expect, actual);\
             main_ret = 1;\
@@ -446,6 +450,58 @@ void testjsonScene()
     auto lept_valueRenderer = lept_find_object_value(&v, "renderer", 8);
     auto lept_valueRenderer_spp = lept_find_object_value(lept_valueRenderer, "spp", 3);
     lept_free(&v);
+
+    {
+        /* 1. Load json string we would like to parse. 
+         * You can load from file or imbedding string literal as below: */
+        std::string testJson = 
+            R"--(
+        {
+	          "Camera":{
+			            "Eye":[-0.160734,-18.9798,5.83172],
+			            "LookAt Destination":[0.10083,1.514,4.82932]
+			           }
+        }
+        )--";
+
+        /* 2. Create LeptjsonParser and bind the result, we can use structural
+         * binding in C++17. */
+        const auto& [status,testParser] = LeptjsonParser::createLeptjsonParser(testJson);
+
+        /* 3. Check parsing status. */
+        EXPECT_EQ_INT(leptjson::ELEPT_PARSE_ECODE::LEPT_PARSE_OK, status);
+        EXPECT_EQ_INT(leptjson::ELeptType::LEPT_OBJECT, testParser->LeptValueType());
+        
+        /* 4. Get root jsonvalue using LeptjsonParser::LeptValue(). */
+        const auto& sceneJsonValue = testParser->LeptValue();
+
+        /* 5. Get the first object "camera". */
+        auto cameraObjectValue = sceneJsonValue["Camera"];
+
+        /* 6. Get "eye" property from camera value, which is an array incorporate 3 components. */
+        auto cameraEyeValue = cameraObjectValue["Eye"];
+        EXPECT_EQ_INT(leptjson::ELeptType::LEPT_ARRAY, cameraEyeValue.LeptValueType());
+
+        /* 7. Get individual components using LeptjsonValue::getNumber(). */
+        std::array<double, 3> eyePosition
+        { cameraEyeValue[0].getNumber(),cameraEyeValue[1].getNumber(),cameraEyeValue[2].getNumber() };
+
+        EXPECT_EQ_DOUBLE(-0.160734, eyePosition[0]);
+        EXPECT_EQ_DOUBLE(-18.9798, eyePosition[1]);
+        EXPECT_EQ_DOUBLE(5.83172, eyePosition[2]);
+
+        /* Same as above! */
+        auto cameraLookAtValue = cameraObjectValue["LookAt Destination"];
+        EXPECT_EQ_INT(leptjson::ELeptType::LEPT_ARRAY, cameraLookAtValue.LeptValueType());
+        std::array<double, 3> cameraLookAtPosition
+        { cameraLookAtValue[0].getNumber(),cameraLookAtValue[1].getNumber(),cameraLookAtValue[2].getNumber() };
+
+        EXPECT_EQ_DOUBLE(0.10083, cameraLookAtPosition[0]);
+        EXPECT_EQ_DOUBLE(1.514, cameraLookAtPosition[1]);
+        EXPECT_EQ_DOUBLE(4.82932, cameraLookAtPosition[2]);
+
+        /* Bonus: No need to deallocate resources due to the usage of RAII! */
+    }
 }
 
 int main() {
@@ -453,9 +509,8 @@ int main() {
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
     test_parse();
-    printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
-
     testjsonScene();
+    printf("%d/%d (%3.2f%%) passed\n", test_pass, test_count, test_pass * 100.0 / test_count);
 
     _CrtDumpMemoryLeaks();
 

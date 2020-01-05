@@ -129,7 +129,7 @@ namespace leptjson
     Lept_value* lept_get_object_value(const Lept_value* v, size_t index);
 
     size_t lept_find_object_index(const Lept_value* v, const char* key, size_t klen);
-    Lept_value* lept_find_object_value(Lept_value* v, const char* key, size_t klen);
+    Lept_value* lept_find_object_value(const Lept_value* v, const char* key, size_t klen);
 }
 
 

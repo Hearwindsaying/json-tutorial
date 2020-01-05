@@ -7,6 +7,7 @@
 #define new CL_CHECK_MEMORY_LEAKS_NEW
 #endif
 #include "leptjson.hpp"
+#include "leptjsonWrapper.hpp"
 #include <cassert>  /* assert() */
 #include <cstdlib>  /* NULL, strtod() */
 #include <cerrno>   /* errno */
@@ -543,7 +544,7 @@ namespace leptjson
         return LEPT_KEY_NOT_EXIST;
     }
 
-    Lept_value* lept_find_object_value(Lept_value* v, const char* key, size_t klen)
+    Lept_value* lept_find_object_value(const Lept_value* v, const char* key, size_t klen)
     {
         size_t index = lept_find_object_index(v, key, klen);
         return index != LEPT_KEY_NOT_EXIST ? &(std::get<Lept_value::JObject>(v->value).m[index].v) : nullptr;
